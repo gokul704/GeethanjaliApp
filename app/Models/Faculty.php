@@ -4,20 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Students extends Model
+class Faculty extends Model
 {
     use HasFactory;
     protected $fillable = [
-    'first_name',
-    'last_name',
-    'roll_no',
-    'college_mail_id',
-    'stream',
-    'joining_year',
-    'is_alumuni',
-    'user_id'];
-
+        'user_id',
+        'faculty_id',
+        'first_name',
+        'last_name',
+        'mobile',
+        'email',
+        'stream',
+        'designation',
+    ];
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');

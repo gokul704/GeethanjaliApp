@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -21,7 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'roll_no'
+        'roll_no',
+        'role'
     ];
 
     /**
@@ -44,8 +46,18 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function students()
+    public function student()
     {
-        return $this->hasMany(Students::class, 'user_id');
+        return $this->hasOne(Students::class, 'user_id', 'id');
+    }
+
+    public function faculty()
+    {
+        return $this->hasOne(Faculty::class, 'user_id', 'id');
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['admin', 'superadmin']);
     }
 }
