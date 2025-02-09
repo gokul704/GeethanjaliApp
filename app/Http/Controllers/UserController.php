@@ -132,59 +132,54 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        // Validate General User Data
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', Rule::unique('users')->ignore($user->id)],
-            'role' => ['required', Rule::in(['student', 'faculty'])],
+            'role' => ['required', Rule::in(['student', 'faculty', 'admin', 'superadmin'])],
         ]);
-
-        // Update User
+    
+        // Update User Table
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
         ]);
-
-        if ($user->role == 'student') {
+    
+        // Handle Student Role
+        if ($user->role === 'student') {
             $studentData = $request->validate([
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
+                'student_id' => 'required|string|unique:students,student_id,' . $user->id . ',user_id',
                 'roll_no' => 'required|string|unique:students,roll_no,' . $user->id . ',user_id',
                 'stream' => 'required|string',
                 'joining_year' => 'required|string',
             ]);
-
-            $studentData['is_alumuni'] = $request->has('is_alumuni');
-
+    
             $user->student()->updateOrCreate(['user_id' => $user->id], $studentData);
         }
-
-        if ($user->role == 'faculty') {
-            $facultyRole = $request->validate([
-                'faculty_role' => 'required|in:admin,superadmin',
+    
+        // Handle Faculty Role
+        if ($user->role === 'faculty') {
+            $facultyData = $request->validate([
+                'faculty_id' => 'required|string|unique:faculties,faculty_id,' . $user->id . ',user_id',
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'mobile' => 'required|string|max:15',
                 'stream' => 'required|string',
+                'faculty_role' => 'required|in:faculty,hod,dean,principal,admin,superadmin',
             ]);
-
-            $facultyData = [
-                'first_name' => $facultyRole['first_name'],
-                'last_name' => $facultyRole['last_name'],
-                'mobile' => $facultyRole['mobile'],
-                'stream' => $facultyRole['stream'],
-                'designation' => $facultyRole['faculty_role'], // Admin or Superadmin
-            ];
-
+    
+            // Set faculty designation based on role
+            $facultyData['designation'] = $facultyData['faculty_role'];
+    
             $user->faculty()->updateOrCreate(['user_id' => $user->id], $facultyData);
-
-            // Update User Role to Selected Faculty Role
-            $user->update(['role' => $facultyRole['faculty_role']]);
         }
-
+    
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
-
+    
     /**
      * Remove the specified user from storage.
      */
